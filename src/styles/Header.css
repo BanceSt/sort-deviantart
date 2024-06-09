@@ -1,0 +1,37 @@
+.Header {
+    background-color: #156064;
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.CS, .CI {
+    background-color: #8999D2;
+    border-radius: 25px;
+    height: 44px;
+    text-align: center;
+    font-size: 28px;
+    box-shadow: inset 0px 4px 4px 0px rgba(0,0,0,0.25);
+}
+
+.CS {
+    width: 436px;
+}
+
+.CI {
+    width: 242px;
+}
+
+.but_submit_logio {
+    height: 44px;
+    width: 190px;
+    font-size: 28px;
+    border-radius: 25px;
+    background-color: #C2CAE8;
+    box-shadow: 0px 4px 4px 0px rgba(0,0,0,0.25);
+    border-width: 0px;
+    margin-right: 10px;
+}
