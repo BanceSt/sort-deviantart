@@ -80,7 +80,10 @@ function Home(props) {
 
     return (
         <div className='ccontainer'> 
-            <Header />
+            <Header access_token={accessToken}/>
+            {
+                accessToken ? <h1> Connecter </h1> : <h1> nope yet </h1>
+            }
         </div>
     );
 }
