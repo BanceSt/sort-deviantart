@@ -3,6 +3,7 @@ import "../styles/Header.css"
 import { urls } from '../assets/urls/urls';
 import { redirect_uri, response_type, scope } from '../assets/params/params';
 
+
 function Header(props) {
     const clientIdRef = useRef();
     const clientSecretRef = useRef();
