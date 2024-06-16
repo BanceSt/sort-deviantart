@@ -8,5 +8,7 @@ export const urls = {
     "Token" : (queryParams) => {
         return `https://www.deviantart.com/oauth2/token?${queryParams}`;
     },
-    "Folders" : "https://www.deviantart.com/api/v1/oauth2/collections/folders?",
+    "Folders" : (queryParams) => {
+        return `https://www.deviantart.com/api/v1/oauth2/collections/folders?${queryParams}`;
+    },
 }

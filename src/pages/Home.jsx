@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import Header from '../Components/Header';
 import { urls } from '../assets/urls/urls';
 import { grant_type_autho, grant_type_refresh, redirect_uri } from '../assets/params/params';
+import "../styles/Home.css"
+import Box from '../Components/Box';
 
 //client_id=${client_id}&client_secret=${client_secret}&grant_type=${grant_type}&code=${code}&redirect_uri=${redirect_uri}
 function Home(props) {
@@ -17,6 +19,7 @@ function Home(props) {
     const [data, setData] = useState(null);
     const [url, setUrl] = useState(null);
     const [queryParams, setQueryParams] = useState(null);
+    const [folders, setFolders] = useState(null);
 
 
     // ===================================== useEffect
@@ -40,8 +43,8 @@ function Home(props) {
         }
     }, [])
 
+    // request
     useEffect(() => {
-
         async function fetch_data() {
             try {
                 const url_fl = urls[url](queryParams);
@@ -57,10 +60,11 @@ function Home(props) {
             } 
         }
 
-        if (url && code) fetch_data();
+        if (url) fetch_data();
         
     },[url]);
 
+    // response treatment
     useEffect(() => {
         if (data) {
             if ((url === "Token") && data.access_token) {
@@ -73,16 +77,45 @@ function Home(props) {
                 setAccessToken(data.access_token);
                 setRefreshToken(data.refresh_token);
                 setAccessTokenTime(tokenTime);
-            }    
+            } else if (url === "Token") {
+                setFolders(folders);
+            }
         }
         
     }, [data])
+
+    // functions
+    // charge the folders
+    const chargeFolders = () => {
+        setQueryParams(new URLSearchParams({
+            "access_token" : accessToken,
+            "ext_preload" : false,
+            "limit" : 50,}).toString());
+        setFolders(true);
+        setUrl("Folders");
+        
+    }
 
     return (
         <div className='ccontainer'> 
             <Header access_token={accessToken}/>
             {
-                accessToken ? <h1> Connecter </h1> : <h1> nope yet </h1>
+                !accessToken ? 
+                <h1> nope yet </h1> :
+                !folders ?
+                chargeFolders()
+                  :
+                <div className="main">
+                    <div className="center_main">
+                        <div className="grp_box">
+                            <Box />
+                            <Box />
+                            <Box />
+                        </div>
+                    </div>
+                </div>
+
+                
             }
         </div>
     );
