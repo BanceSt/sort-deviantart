@@ -53,3 +53,7 @@
     border-style: solid;
     border-color: grey;
 }
+
+.selected {
+    background-color: #70FFE0;
+}

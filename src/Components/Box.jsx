@@ -1,7 +1,7 @@
 import React from 'react';
 import "../styles/Box.css";
 
-function Box({name ="DEFAULT", elements = []}) {
+function Box({index, name ="DEFAULT", elements = [], choice = "", onClick = () => {}}) {
     return (
         <div className='box'>
             <div className="box_header">
@@ -11,9 +11,9 @@ function Box({name ="DEFAULT", elements = []}) {
             </div>
             <div className="box_main">
                 {
-                    elements.map((element) => {
+                    elements.map((element, ind) => {
                         return(
-                            <div className="box_element">
+                            <div className={"box_element " + ((choice === element.name) ? "selected": "")} onClick={(event) => onClick(event, index)} id={ind}>
                                 {element.name}
                             </div>
                         )

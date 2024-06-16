@@ -8,13 +8,12 @@ function Header({access_token}) {
     const clientIdRef = useRef();
     const clientSecretRef = useRef();
 
-    console.log(access_token);
+    // console.log(access_token);
     
 
     //Comportement
 
     const handleLoginButtonClick = () => {
-        console.log("Start_test");
 
         console.log(clientIdRef.current.value);
         console.log(clientSecretRef.current.value);
