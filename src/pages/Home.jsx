@@ -77,8 +77,9 @@ function Home(props) {
                 setAccessToken(data.access_token);
                 setRefreshToken(data.refresh_token);
                 setAccessTokenTime(tokenTime);
-            } else if (url === "Token") {
-                setFolders(folders);
+            } else if (url === "Folders") {
+                setFolders(data.results);
+                console.log("Folders : ", data.results);
             }
         }
         
@@ -108,7 +109,7 @@ function Home(props) {
                 <div className="main">
                     <div className="center_main">
                         <div className="grp_box">
-                            <Box />
+                            <Box name='FOLDERS' elements={folders}/>
                             <Box />
                             <Box />
                         </div>
