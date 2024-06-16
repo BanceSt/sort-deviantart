@@ -92,7 +92,7 @@ function Home(props) {
             "access_token" : accessToken,
             "ext_preload" : false,
             "limit" : 50,}).toString());
-        setFolders(true);
+        setFolders([]);
         setUrl("Folders");
         
     }
