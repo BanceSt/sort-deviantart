@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Header from '../Components/Header';
-import { urls } from '../assets/urls/urls';
+import { setFolderId, urls } from '../assets/urls/urls';
 import { grant_type_autho, grant_type_refresh, redirect_uri } from '../assets/params/params';
 import "../styles/Home.css"
 import Box from '../Components/Box';
@@ -93,8 +93,12 @@ function Home(props) {
             } else if (url === "Folders") {
                 setFolders(data.results);
                 console.log("Folders : ", data.results);
+            } else if (url === "Folder") {
+                setUrl(null);
+                
             }
         }
+      
         
     }, [data])
 
@@ -113,20 +117,38 @@ function Home(props) {
     const handleSelect = (event, index) => {
         const selections_temp = [...selections];
         if (index === 0) {
-            selections_temp[index] = folders[event.target.id].name;
+            selections_temp[index] = folders[event.target.id];
             
 
         } else if (index === 1) {
-            selections_temp[index] = sorts_types[event.target.id].name;
+            selections_temp[index] = sorts_types[event.target.id];
             
         }
-        console.log(selections_temp);
         setSelections(selections_temp);
+    }
+
+    const launchSelect = (event) => {
+        if (event.key === "Enter") {
+            if (selections[0] && selections[1]) {
+                setFolderId(selections[0].folderid);
+                console.log(urls["Folder"]());
+
+                setQueryParams(new URLSearchParams({
+                    "access_token" : accessToken,
+                    "offset": 0,
+                    "limit" : 24,
+                    "mature_content" : true}).toString());
+                setUrl("Folder");
+            }
+            
+            
+            
+        }
         
     }
 
     return (
-        <div className='ccontainer'> 
+        <div className='ccontainer' onKeyDown={launchSelect} tabIndex="0"> 
             <Header access_token={accessToken}/>
             {
                 !accessToken ? 
@@ -139,7 +161,7 @@ function Home(props) {
                         <div className="grp_box">
                             <Box index={0} name='FOLDERS' elements={folders} choice={selections[0]} onClick={handleSelect}/>
                             <Box index={1} name="SORT BY" elements={sorts_types} choice={selections[1]} onClick={handleSelect}/>
-                            <Box index={2} />
+                            <Box index={2} name="LOG" />
                         </div>
                     </div>
                 </div>

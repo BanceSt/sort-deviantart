@@ -1,11 +1,20 @@
 export const sorts_types  = [
     {
-        "name" : "aléatoire"
+        "name" : "aléatoire",
+        "func" : () => {
+
+        }
     },
     {
-        "name" : "alphabéthique author-title"
+        "name" : "alphabéthique author-title",
+        "func" : () => {
+
+        }
     },
     {
-        "name" : "alphabéthique title-author"
+        "name" : "alphabéthique title-author",
+        "func" : () => {
+
+        }
     },
 ]
