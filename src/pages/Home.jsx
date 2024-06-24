@@ -22,7 +22,7 @@ function Home(props) {
     // const [loginState, setLoginState] = useState(false);   
 
     // variable pour gérer les requêtes
-    const [data, setData] = useState(null);
+    // const [data, setData] = useState(null);
     const [url, setUrl] = useState(null);
     const [queryParams, setQueryParams] = useState(null);
     const [folders, setFolders] = useState(null);
@@ -57,52 +57,69 @@ function Home(props) {
     }, [])
 
     // request
-    useEffect(() => {
-        async function fetch_data() {
-            try {
-                const url_fl = urls[url](queryParams);
-                const response = await fetch(url_fl)
-                const data_temp = await response.json()
-                console.log(data_temp);
-                // console.log(data_temp.access_token);
+    // useEffect(() => {
+    //     async function fetch_data() {
+    //         try {
+    //             const url_fl = urls[url](queryParams);
+    //             const response = await fetch(url_fl)
+    //             const data_temp = await response.json()
+    //             console.log(data_temp);
+    //             // console.log(data_temp.access_token);
 
                 
-                setData(data_temp);
-            } catch (err){
-                console.error(err);
-            } 
-        }
+    //             setData(data_temp);
+    //         } catch (err){
+    //             console.error(err);
+    //         } 
+    //     }
 
-        if (url) fetch_data();
+    //     if (url) fetch_data();
         
-    },[url]);
+    // },[url]);
 
     // response treatment
-    useEffect(() => {
-        if (data) {
-            if ((url === "Token") && data.access_token) {
-                // sauvegarde
-                const tokenTime = Date.now() / 1000;
-                window.localStorage.setItem("access_token", data.access_token);
-                window.localStorage.setItem("refresh_token", data.refresh_token);
-                window.localStorage.setItem("access_token_time", tokenTime);
+
+    // useEffect(() => {
+    //     if (data) {
+    //         if ((url === "Token") && data.access_token) {
+    //             // sauvegarde
+    //             const tokenTime = Date.now() / 1000;
+    //             window.localStorage.setItem("access_token", data.access_token);
+    //             window.localStorage.setItem("refresh_token", data.refresh_token);
+    //             window.localStorage.setItem("access_token_time", tokenTime);
     
-                setAccessToken(data.access_token);
-                setRefreshToken(data.refresh_token);
-                setAccessTokenTime(tokenTime);
-            } else if (url === "Folders") {
-                setFolders(data.results);
-                console.log("Folders : ", data.results);
-            } else if (url === "Folder") {
-                setUrl(null);
+    //             setAccessToken(data.access_token);
+    //             setRefreshToken(data.refresh_token);
+    //             setAccessTokenTime(tokenTime);
+    //         } else if (url === "Folders") {
+    //             setFolders(data.results);
+    //             console.log("Folders : ", data.results);
+    //         } else if (url === "Folder") {
+    //             setUrl(null);
                 
-            }
-        }
+    //         }
+    //     }
       
         
-    }, [data])
+    // }, [data])
 
     // functions
+
+    // do request
+    async function fetch_data() {
+                try {
+                    const url_fl = urls[url](queryParams);
+                    const response = await fetch(url_fl)
+                    const data_temp = await response.json()
+                    console.log(data_temp);
+                    // console.log(data_temp.access_token);
+                    return data_temp;
+                } catch (err){
+                    console.error(err);
+                } 
+    }
+
+
     // charge the folders
     const chargeFolders = () => {
         setQueryParams(new URLSearchParams({
@@ -156,15 +173,16 @@ function Home(props) {
                 !folders ?
                 chargeFolders()
                   :
-                <div className="main">
-                    <div className="center_main">
-                        <div className="grp_box">
-                            <Box index={0} name='FOLDERS' elements={folders} choice={selections[0]} onClick={handleSelect}/>
-                            <Box index={1} name="SORT BY" elements={sorts_types} choice={selections[1]} onClick={handleSelect}/>
-                            <Box index={2} name="LOG" />
-                        </div>
-                    </div>
-                </div>
+                 <h1> rebuilding </h1>
+                // <div className="main">
+                //     <div className="center_main">
+                //         <div className="grp_box">
+                //             <Box index={0} name='FOLDERS' elements={folders} choice={selections[0]} onClick={handleSelect}/>
+                //             <Box index={1} name="SORT BY" elements={sorts_types} choice={selections[1]} onClick={handleSelect}/>
+                //             <Box index={2} name="LOG" />
+                //         </div>
+                //     </div>
+                // </div>
 
                 
             }
