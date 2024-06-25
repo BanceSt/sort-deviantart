@@ -10,6 +10,7 @@ import { sorts_types } from '../assets/params/func_sort';
 function Home(props) {
     // Vérification de l'url
     const urlParam = new URLSearchParams(window.location.search);
+    let data;
 
     // Récupération des identifiants
     const clientId = window.localStorage.getItem("Client_id");
@@ -55,6 +56,13 @@ function Home(props) {
                 "refresh_token": accessRefresh}).toString());
         }
     }, [])
+
+    useEffect(() => {
+        if (url == "Token") {
+            fetch_data();
+            console.log(data);
+        }
+    }, [url])
 
     // request
     // useEffect(() => {
@@ -106,14 +114,15 @@ function Home(props) {
     // functions
 
     // do request
+
+
     async function fetch_data() {
                 try {
                     const url_fl = urls[url](queryParams);
                     const response = await fetch(url_fl)
-                    const data_temp = await response.json()
-                    console.log(data_temp);
+                    data = await response.json()
+                    // console.log(data_temp);
                     // console.log(data_temp.access_token);
-                    return data_temp;
                 } catch (err){
                     console.error(err);
                 } 
