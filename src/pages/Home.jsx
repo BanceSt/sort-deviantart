@@ -32,6 +32,7 @@ function Home(props) {
 
 
     // ===================================== useEffect
+    // Récupération de token
     useEffect(() => {
         // Vérification pour la premier connection
         console.log("TEST 1");
@@ -45,7 +46,9 @@ function Home(props) {
                 "grant_type" : grant_type_autho,
                 "code" : code,
                 "redirect_uri": redirect_uri}).toString());
-        } else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
+        }
+        // Token plus à jour 
+        else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
             console.log("TEST 3");
             setUrl("Token")
             setQueryParams(new URLSearchParams({
@@ -114,6 +117,7 @@ function Home(props) {
         
     }
 
+    // gérer les sélections
     const handleSelect = (event, index) => {
         const selections_temp = [...selections];
         if (index === 0) {
@@ -127,6 +131,8 @@ function Home(props) {
         setSelections(selections_temp);
     }
 
+
+    // Gére le traitement des deviants
     const launchSelect = (event) => {
         if (event.key === "Enter") {
             if (selections[0] && selections[1]) {
