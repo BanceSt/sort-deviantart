@@ -19,6 +19,7 @@ function Home(props) {
     const [accessToken, setAccessToken] = useState(window.localStorage.getItem("access_token"));
     const [accessRefresh, setRefreshToken] = useState(window.localStorage.getItem("refresh_token"));
     const [accessTokenTime, setAccessTokenTime] = useState(window.localStorage.getItem("access_token_time"));
+    const [chargeFolders, setChargeFolders] = useState(false);
     // const [loginState, setLoginState] = useState(false);   
 
     // variable pour gérer les requêtes
@@ -27,7 +28,7 @@ function Home(props) {
     const [queryParams, setQueryParams] = useState(null);
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
-    const [nextOffset, setNextOffset] = useState(null);
+    const [nextOffset, setNextOffset] = useState(-1);
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
@@ -37,10 +38,10 @@ function Home(props) {
     // Récupération de token
     useEffect(() => {
         // Vérification pour la premier connection
-        console.log("TEST 1");
-        console.log("Result : ",(Date.now() / 1000) - accessTokenTime)
+        console.log("Vérification token");
+        console.log("Result time : ",(Date.now() / 1000) - accessTokenTime)
         if (code && !accessToken) {
-            console.log("TEST 2");
+            console.log("Token premier connection");
             setUrl("Token")
             setQueryParams(new URLSearchParams({
                 "client_id" : clientId,
@@ -51,13 +52,18 @@ function Home(props) {
         }
         // Token plus à jour 
         else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
-            console.log("TEST 3");
+            console.log("token par refresh");
             setUrl("Token")
             setQueryParams(new URLSearchParams({
                 "client_id" : clientId,
                 "client_secret" : clientSecret,
                 "grant_type" : grant_type_refresh,
                 "refresh_token": accessRefresh}).toString());
+        }
+        // Token toujours bon
+        else {
+            console.log("token non necessaire");
+            setChargeFolders(true);
         }
     }, [])
 
@@ -66,8 +72,9 @@ function Home(props) {
         async function fetch_data() {
             try {
                 const url_fl = urls[url](queryParams);
-                const response = await fetch(url_fl)
-                const data_temp = await response.json()
+                console.log("complete URL : ",url_fl);
+                const response = await fetch(url_fl);
+                const data_temp = await response.json();
                 
                 // console.log(data_temp.access_token);
 
@@ -87,6 +94,7 @@ function Home(props) {
         if (data) {
             if ((url === "Token") && data.access_token) {
                 // sauvegarde
+                console.log("TOKEN SAVE");
                 const tokenTime = Date.now() / 1000;
                 window.localStorage.setItem("access_token", data.access_token);
                 window.localStorage.setItem("refresh_token", data.refresh_token);
@@ -95,50 +103,68 @@ function Home(props) {
                 setAccessToken(data.access_token);
                 setRefreshToken(data.refresh_token);
                 setAccessTokenTime(tokenTime);
+
+                //Chargement des dossiers
+                setChargeFolders(true);
             } else if (url === "Folders") {
                 setFolders(data.results);
                 console.log("Folders : ", data.results);
             } else if (url === "Folder") {
                 // Récupération des deviants
                 setUrl(null);
-
-                // si ce n'est pas le première vérification sur les deviants
-                if (nextOffset)  {
-                    setDeviants([...deviants, ...data.results]);
-                } else {
+                console.log("data folder :", data);
+                // si c'est le première requête sur les deviants
+                if (nextOffset === -1)  {
                     setDeviants([...data.results]);
+                } else { // si il y'en a d'autre à faire
+                    setDeviants([...deviants, ...data.results]);
                 }
                 setNextOffset(data.next_offset);                               // y'a t'il d'autre deviants à récupérer
-                console.log("data folder :", data);
+                
             }
         }
     }, [data])
 
     // vérification que l'on possède tous les déviants
     useEffect(() => {
-        console.log("Here test : ", deviants);
+        console.log("deviants : ", deviants);
         console.log("offset : ", nextOffset);
-        if (nextOffset) {
+        if (nextOffset && (nextOffset !== -1)) {
             setQueryParams(new URLSearchParams({
                 "access_token" : accessToken,
                 "offset": nextOffset,
                 "limit" : 24,
                 "mature_content" : true}).toString());
                 setUrl("Folder")
+        } else {
+            setNextOffset(-1)
+            console.log("End request")
         }
     }, [nextOffset])
 
+    // charger les dossiers après la connection
+    useEffect (() => {
+        if (chargeFolders) {
+            setQueryParams(new URLSearchParams({
+                "access_token" : accessToken,
+                "ext_preload" : false,
+                "limit" : 50,}).toString());
+            setFolders([]);
+            setUrl("Folders");
+        }
+    }, [chargeFolders])
+
     // functions
     // charge the folders
-    const chargeFolders = () => {
-        setQueryParams(new URLSearchParams({
-            "access_token" : accessToken,
-            "ext_preload" : false,
-            "limit" : 50,}).toString());
-        setFolders([]);
-        setUrl("Folders");
+    // const chargeFolders = () => {
+    //     setQueryParams(new URLSearchParams({
+    //         "access_token" : accessToken,
+    //         "ext_preload" : false,
+    //         "limit" : 50,}).toString());
+    //     setFolders([]);
+    //     setUrl("Folders");
         
-    }
+    // }
 
     // gérer les sélections
     const handleSelect = (event, index) => {
@@ -182,14 +208,12 @@ function Home(props) {
             {
                 !accessToken ? 
                 <h1> nope yet </h1> :
-                !folders ?
-                chargeFolders()
-                  :
+
                 <div className="main">
                     <div className="center_main">
                         <div className="grp_box">
-                            <Box index={0} name='FOLDERS' elements={folders} choice={selections[0]} onClick={handleSelect}/>
-                            <Box index={1} name="SORT BY" elements={sorts_types} choice={selections[1]} onClick={handleSelect}/>
+                            <Box index={0} name='FOLDERS' elements={folders ? folders : []} choice={selections[0]} onClick={handleSelect}/>
+                            <Box index={1} name="SORT BY" elements={folders ? sorts_types : []} choice={selections[1]} onClick={handleSelect}/>
                             <Box index={2} name="LOG" />
                         </div>
                     </div>
