@@ -26,6 +26,8 @@ function Home(props) {
     const [url, setUrl] = useState(null);
     const [queryParams, setQueryParams] = useState(null);
     const [folders, setFolders] = useState(null);
+    const [deviants, setDeviants] = useState(null);
+    const [nextOffset, setNextOffset] = useState(null);
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
@@ -66,7 +68,7 @@ function Home(props) {
                 const url_fl = urls[url](queryParams);
                 const response = await fetch(url_fl)
                 const data_temp = await response.json()
-                console.log(data_temp);
+                
                 // console.log(data_temp.access_token);
 
                 
@@ -97,13 +99,34 @@ function Home(props) {
                 setFolders(data.results);
                 console.log("Folders : ", data.results);
             } else if (url === "Folder") {
+                // Récupération des deviants
                 setUrl(null);
-                
+
+                // si ce n'est pas le première vérification sur les deviants
+                if (nextOffset)  {
+                    setDeviants([...deviants, ...data.results]);
+                } else {
+                    setDeviants([...data.results]);
+                }
+                setNextOffset(data.next_offset);                               // y'a t'il d'autre deviants à récupérer
+                console.log("data folder :", data);
             }
         }
-      
-        
     }, [data])
+
+    // vérification que l'on possède tous les déviants
+    useEffect(() => {
+        console.log("Here test : ", deviants);
+        console.log("offset : ", nextOffset);
+        if (nextOffset) {
+            setQueryParams(new URLSearchParams({
+                "access_token" : accessToken,
+                "offset": nextOffset,
+                "limit" : 24,
+                "mature_content" : true}).toString());
+                setUrl("Folder")
+        }
+    }, [nextOffset])
 
     // functions
     // charge the folders
@@ -137,7 +160,7 @@ function Home(props) {
         if (event.key === "Enter") {
             if (selections[0] && selections[1]) {
                 setFolderId(selections[0].folderid);
-                console.log(urls["Folder"]());
+                console.log("sort by : ", selections[1]);
 
                 setQueryParams(new URLSearchParams({
                     "access_token" : accessToken,
