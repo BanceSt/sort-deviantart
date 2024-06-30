@@ -2,13 +2,20 @@ export const sorts_types  = [
     {
         "name" : "aleatoire",
         "func" : (array) => {
+            console.log("Here func aleatoire");
+            let shuffledArray = [...array];
             for (let i = array.length - 1; i > 0; i--) {
+                // console.log("Here func aleatoire ", array[i]);
+                
                 const j = Math.floor(Math.random() * (i + 1));
-                const temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
+                const temp = shuffledArray[i];
+                shuffledArray[i] = shuffledArray[j];
+                shuffledArray[j] = temp;
               }
+            console.log("a:", shuffledArray);
+            return shuffledArray;
         }
+        
     },
     {
         "name" : "alphabéthique author-title",

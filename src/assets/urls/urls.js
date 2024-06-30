@@ -11,13 +11,17 @@ export const urls = {
     "Test" : () => {
         return `https://www.deviantart.com/api/v1/oauth2/placebo?`;
     },
-    "Token" : (queryParams) => {
-        return `https://www.deviantart.com/oauth2/token?${queryParams}`;
+    "Token" : () => {
+        return `https://www.deviantart.com/oauth2/token?`;
     },
-    "Folders" : (queryParams) => {
-        return `https://www.deviantart.com/api/v1/oauth2/collections/folders?${queryParams}`;
+    "Folders" : () => {
+        return `https://www.deviantart.com/api/v1/oauth2/collections/folders?`;
     },
     "Folder" : (queryParams) => {
         return `https://www.deviantart.com/api/v1/oauth2/collections/${folderId}?${queryParams}`;
+    }, "Copy" : () => {
+        return "https://www.deviantart.com/api/v1/oauth2/collections/folders/copy_deviations";
     },
 }
+
+// ${queryParams}

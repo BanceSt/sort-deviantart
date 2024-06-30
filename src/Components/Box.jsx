@@ -13,7 +13,7 @@ function Box({index, name ="DEFAULT", elements = [], choice = "", onClick = () =
                 {
                     elements.map((element, ind) => {
                         return(
-                            <div className={"box_element " + ((choice.name === element.name) ? "selected": "")} onClick={(event) => onClick(event, index)} id={ind}>
+                            <div className={"box_element " + ((choice.name === element.name) ? "selected": "")} onClick={(event) => onClick(event, index)} id={ind} key={ind}>
                                 {element.name}
                             </div>
                         )

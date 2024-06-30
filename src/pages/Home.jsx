@@ -24,11 +24,13 @@ function Home(props) {
 
     // variable pour gérer les requêtes
     const [data, setData] = useState(null);
+    const [form, setForm] = useState({});
     const [url, setUrl] = useState(null);
-    const [queryParams, setQueryParams] = useState(null);
+    const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
     const [nextOffset, setNextOffset] = useState(-1);
+    const [nextOffsetC, setNextOffsetC] = useState(-1);
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
@@ -38,27 +40,32 @@ function Home(props) {
     // Récupération de token
     useEffect(() => {
         // Vérification pour la premier connection
-        console.log("Vérification token");
-        console.log("Result time : ",(Date.now() / 1000) - accessTokenTime)
+        // console.log("Vérification token");
+        // console.log("Result time : ",(Date.now() / 1000) - accessTokenTime)
         if (code && !accessToken) {
             console.log("Token premier connection");
             setUrl("Token")
-            setQueryParams(new URLSearchParams({
-                "client_id" : clientId,
-                "client_secret" : clientSecret,
-                "grant_type" : grant_type_autho,
-                "code" : code,
-                "redirect_uri": redirect_uri}).toString());
+
+            //form pour récupération de Token
+            const formData = new FormData();
+            formData.append('client_id', clientId);
+            formData.append('client_secret', clientSecret);
+            formData.append('grant_type', grant_type_refresh);
+            formData.append('refresh_token', accessRefresh);
+            setForm(formData)
         }
         // Token plus à jour 
         else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
             console.log("token par refresh");
             setUrl("Token")
-            setQueryParams(new URLSearchParams({
-                "client_id" : clientId,
-                "client_secret" : clientSecret,
-                "grant_type" : grant_type_refresh,
-                "refresh_token": accessRefresh}).toString());
+
+            //form pour récupération d'un nouveau Token
+            const formData = new FormData();
+            formData.append('client_id', clientId);
+            formData.append('client_secret', clientSecret);
+            formData.append('grant_type', grant_type_refresh);
+            formData.append('refresh_token', accessRefresh);
+            setForm(formData)    
         }
         // Token toujours bon
         else {
@@ -73,7 +80,10 @@ function Home(props) {
             try {
                 const url_fl = urls[url](queryParams);
                 console.log("complete URL : ",url_fl);
-                const response = await fetch(url_fl);
+                const response = await fetch(url_fl, {
+                    method : "POST",
+                    body : form
+                });
                 const data_temp = await response.json();
                 
                 // console.log(data_temp.access_token);
@@ -108,13 +118,14 @@ function Home(props) {
                 setChargeFolders(true);
             } else if (url === "Folders") {
                 setFolders(data.results);
-                console.log("Folders : ", data.results);
+                // console.log("Folders : ", data.results);
             } else if (url === "Folder") {
                 // Récupération des deviants
                 setUrl(null);
-                console.log("data folder :", data);
+                // console.log("data folder :", data);
                 // si c'est le première requête sur les deviants
                 if (nextOffset === -1)  {
+                    console.log("Premier demande requete")
                     setDeviants([...data.results]);
                 } else { // si il y'en a d'autre à faire
                     setDeviants([...deviants, ...data.results]);
@@ -127,28 +138,42 @@ function Home(props) {
 
     // vérification que l'on possède tous les déviants
     useEffect(() => {
-        console.log("deviants : ", deviants);
-        console.log("offset : ", nextOffset);
-        if (nextOffset && (nextOffset !== -1)) {
-            setQueryParams(new URLSearchParams({
-                "access_token" : accessToken,
-                "offset": nextOffset,
-                "limit" : 24,
-                "mature_content" : true}).toString());
-                setUrl("Folder")
-        } else {
-            setNextOffset(-1)
-            console.log("End request")
+        // console.log("deviants : ", deviants);
+        // console.log("offset : ", nextOffset);
+        if (nextOffset !== -1) {
+            if (nextOffset) {
+                console.log("x demande requete")
+                setQueryParams(new URLSearchParams({
+                    "access_token" : accessToken,
+                    "offset": nextOffset,
+                    "limit" : 24,
+                    "mature_content" : true}).toString());
+                    setUrl("Folder")
+            } else {
+                setNextOffset(-1)
+                // console.log("tempFolder before treatement : ", deviants)
+                let tempdeviants = selections[1].func([...deviants]);
+                setDeviants([...tempdeviants]);
+                // console.log("tempFolder after treatement : ", tempdeviants)
+                console.log("End request");
+
+                //requête de copy
+                setNextOffsetC(deviants.length >= 24 ? 24 : deviants.length)
+                
+            }
         }
     }, [nextOffset])
 
     // charger les dossiers après la connection
     useEffect (() => {
         if (chargeFolders) {
-            setQueryParams(new URLSearchParams({
-                "access_token" : accessToken,
-                "ext_preload" : false,
-                "limit" : 50,}).toString());
+            //form pour récupération les dossiers
+            const formData = new FormData();
+            formData.append('access_token', accessToken);
+            formData.append('ext_preload', false);
+            formData.append('limit', 50);
+
+            setForm(formData) 
             setFolders([]);
             setUrl("Folders");
         }
@@ -185,8 +210,13 @@ function Home(props) {
     const launchSelect = (event) => {
         if (event.key === "Enter") {
             if (selections[0] && selections[1]) {
+                // Sélection du dossier
                 setFolderId(selections[0].folderid);
-                console.log("sort by : ", selections[1]);
+
+                // form pour récupérer les deviations
+                const formData = new FormData();
+                formData.append('access_token', accessToken);
+                setForm(formData) 
 
                 setQueryParams(new URLSearchParams({
                     "access_token" : accessToken,
@@ -195,9 +225,7 @@ function Home(props) {
                     "mature_content" : true}).toString());
                 setUrl("Folder");
             }
-            
-            
-            
+             
         }
         
     }
