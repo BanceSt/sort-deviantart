@@ -30,7 +30,7 @@ function Home(props) {
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
     const [nextOffset, setNextOffset] = useState(-1);
-    const [nextOffsetC, setNextOffsetC] = useState(-1);
+    const [nextOffsetC, setNextOffsetC] = useState(0);
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
@@ -132,15 +132,26 @@ function Home(props) {
                 }
                 setNextOffset(data.next_offset);                               // y'a t'il d'autre deviants à récupérer
                 
+            } else if (url === "Copy") {
+                // Copie des deviations
+                setUrl(null);
+                if (deviants.length > ((nextOffsetC + 1) * 24)) {
+                    console.log("NextOffC");
+                    setNextOffsetC(nextOffsetC + 1)
+                } else {
+                    setNextOffsetC(0)
+                }
             }
         }
     }, [data])
 
     // vérification que l'on possède tous les déviants
     useEffect(() => {
-        // console.log("deviants : ", deviants);
+        
         // console.log("offset : ", nextOffset);
         if (nextOffset !== -1) {
+            console.log("deviants : ", deviants);
+
             if (nextOffset) {
                 console.log("x demande requete")
                 setQueryParams(new URLSearchParams({
@@ -158,11 +169,47 @@ function Home(props) {
                 console.log("End request");
 
                 //requête de copy
-                setNextOffsetC(deviants.length >= 24 ? 24 : deviants.length)
-                
+
+                //formulaire pour réorganiser
+                const formData = new FormData();
+                formData.append('access_token', accessToken);
+                formData.append('target_folderid', selections[0].folderid);
+                formData.append("mature_content", true);
+                for (let i = Math.max((tempdeviants.length - 24), 0); i < tempdeviants.length; i++) {
+                    formData.append(`deviationids[${i}]`, tempdeviants[i].deviationid)
+                }
+
+                setForm(formData)
+                setUrl("Copy")
+
             }
         }
     }, [nextOffset])
+
+
+    // Copie de toutes les déviations
+    useEffect(() => {
+        //formulaire pour réorganiser
+        if (nextOffsetC > 0)
+        {
+            console.log("here")
+            const formData = new FormData();
+            formData.append('access_token', accessToken);
+            formData.append('target_folderid', selections[0].folderid);
+            formData.append("mature_content", true);
+
+            const start = Math.max((deviants.length - 24 * (nextOffsetC + 1)), 0);
+            const end = deviants.length - 24 * nextOffsetC
+            for (let i = start; i < end; i++) {
+                formData.append(`deviationids[${i}]`, deviants[i].deviationid)
+            }
+            console.log("form : ", formData);
+
+        setForm(formData)
+        setUrl("Copy")
+
+        }
+    }, [nextOffsetC])
 
     // charger les dossiers après la connection
     useEffect (() => {
