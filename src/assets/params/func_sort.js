@@ -21,11 +21,11 @@ export const sorts_types  = [
         "name" : "alphabéthique author-title",
         "func" : (array) => {
 
-            //function de sort author-title
+            //function de sort author-titleusername.
             function sortDeviant (a, b) {
                 // enlever les espaces et mettre en maj
-                let author_a = a.author.trim().toUpperCase();
-                let author_b = b.author.trim().toUpperCase();
+                let author_a = a.author.username.trim().toUpperCase();
+                let author_b = b.author.username.trim().toUpperCase();
             
                 if (author_a === author_b) {
                     // enlever les espaces et mettre en maj
@@ -41,6 +41,7 @@ export const sorts_types  = [
 
             // utilisation de la fonction
             array.sort(sortDeviant);
+            return array;
         }
     },
     {
@@ -56,8 +57,8 @@ export const sorts_types  = [
             
                 if (title_a === title_b) {
                     // enlever les espaces et mettre en maj
-                    let author_a = a.author.trim().toUpperCase();
-                    let author_b = b.author.trim().toUpperCase();
+                    let author_a = a.author.username.trim().toUpperCase();
+                    let author_b = b.author.username.trim().toUpperCase();
                     
             
                     if (author_a < author_b) return -1;
@@ -69,6 +70,7 @@ export const sorts_types  = [
 
              // utilisation de la fonction
              array.sort(sortDeviant);
+             return array;
         }
     },
 ]
