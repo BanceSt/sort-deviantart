@@ -73,4 +73,56 @@ export const sorts_types  = [
              return array;
         }
     },
+    {
+        "name" : "Plus récent",
+        "func" : (array) => {
+            function sortDeviant(a, b) {
+                if (parseInt(a.published_time) < parseInt(b.published_time)) 
+                    return 1;
+                else return -1;
+            }
+            // utilisation de la fonction
+            array.sort(sortDeviant);
+            return array;
+        }
+    },
+    {
+        "name" : "Plus ancien",
+        "func" : (array) => {
+            function sortDeviant(a, b) {
+                if (parseInt(a.published_time) > parseInt(b.published_time)) 
+                    return 1;
+                else return -1;
+            }
+            // utilisation de la fonction
+            array.sort(sortDeviant);
+            return array;
+        }
+    },
+    {
+        "name" : "Populaire",
+        "func" : (array) => {
+            function sortDeviant(a, b) {
+                if (parseInt(a.stats.favourites) < parseInt(b.stats.favourites)) 
+                    return 1;
+                else return -1;
+            }
+            // utilisation de la fonction
+            array.sort(sortDeviant);
+            return array;
+        }
+    },
+    {
+        "name" : "Engagement",
+        "func" : (array) => {
+            function sortDeviant(a, b) {
+                if (parseInt(a.stats.comments) < parseInt(b.stats.comments)) 
+                    return 1;
+                else return -1;
+            }
+            // utilisation de la fonction
+            array.sort(sortDeviant);
+            return array;
+        }
+    },
 ]
