@@ -8,6 +8,7 @@
     border-style: solid;
     border-color: rgb(168, 178, 167);
     box-shadow: 5px 7px 11px 6px rgba(0,0,0,0.05);
+    border-radius: 4px;
 }
 
 .box_header {
@@ -43,6 +44,7 @@
     border-width: 1px 0 0 0 ;
     border-style: solid;
     border-color: rgb(168, 178, 167);
+    border-radius: 0px 0px 4px 4px;
 }
 
 .box_element {
