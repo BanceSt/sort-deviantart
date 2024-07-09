@@ -20,14 +20,15 @@ function Home(props) {
     const [accessRefresh, setRefreshToken] = useState(window.localStorage.getItem("refresh_token"));
     const [accessTokenTime, setAccessTokenTime] = useState(window.localStorage.getItem("access_token_time"));
     const [chargeFolders, setChargeFolders] = useState(false);
-    // const [loginState, setLoginState] = useState(false);   
 
     // variable pour gérer les requêtes
-    const [error, setError] = useState(false);
-    const [data, setData] = useState(null);
-    const [form, setForm] = useState({});
     const [url, setUrl] = useState(null);
+    const [form, setForm] = useState({});
     const [tempUrl, setTempUrl] = useState(null);
+    const [tempForm, setTempForm] = useState({});
+
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(false);
     const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
@@ -38,12 +39,10 @@ function Home(props) {
     ]);
 
 
-    // ===================================== useEffect
-    // Récupération de token
+    // ===================================== useEffect ===================================== 
+    // useEffect |================| Récupération de token
     useEffect(() => {
         // Vérification pour la premier connection
-        // console.log("Vérification token");
-        // console.log("Result time : ",(Date.now() / 1000) - accessTokenTime)
         if (code && !accessToken) {
             console.log("Token premier connection");
             setUrl("Token")
@@ -76,56 +75,54 @@ function Home(props) {
         }
     }, [])
 
-    // request
+    // useEffect |================| request api deviantart
     useEffect(() => {
+        // function request api
         async function fetch_data() {
             try {
+                //Récupération de l'url complete
                 const url_fl = urls[url](queryParams);
-                console.log("complete URL : ",url_fl);
+
+                // Emmetre la requête est récupération de la réponse
                 const response = await fetch(url_fl, {
                     method : "POST",
                     body : form
                 });
                 const data_temp = await response.json();
-                
-                // console.log(data_temp.access_token);
-
-                
                 setData(data_temp);
+
             } catch (err){
+                // Capture des erreurs,
                 console.error(err)
-                setTempUrl(url);
+                setTempUrl(url);                                        //si l'erreur arrive durant une requête récupération de la requête en cours
+                setTempForm(form);
                 setUrl(null);
                 setError(true);
             } 
         }
 
+        // déclenche si on a une url
         if (url) fetch_data();
         
     },[url]);
 
-    //Gestion erreur
-    useEffect(() => {
-        if (error) {
-            setError(false);
-        }
-    }, [error])
-
-    // response treatment
+    // =====================================  response treatment
     useEffect(() => {
        
         if (data) {
             // Vérification qu'une erreur ne x'est pas produite dans la requete
             if (data.error) {
-                console.log("Erreor : ", data)
+                console.log("Error : ", data)
                 setTempUrl(url);
+                setTempForm(form);
                 setUrl(null)
                 setError(true);
                 return
             }
 
+            // 
             if ((url === "Token") && data.access_token) {
-                // sauvegarde
+                // sauvegarde des tokens et du temps de sauvagarde
                 console.log("TOKEN SAVE");
                 const tokenTime = Date.now() / 1000;
                 window.localStorage.setItem("access_token", data.access_token);
@@ -139,15 +136,22 @@ function Home(props) {
                 //Chargement des dossiers
                 setChargeFolders(true);
             } else if (url === "Folders") {
+                // Récupérations des dossiers
                 setFolders(data.results);
-                // console.log("Folders : ", data.results);
+                
+                // reprise de la requête en cours si y'en à une
+                if (tempUrl) {
+                    setUrl(tempUrl);
+                    setForm(tempForm);
+                    setTempUrl(null);
+                    setTempForm({});
+                }
             } else if (url === "Folder") {
-                // Récupération des deviants
+                // Récupération des deviations
                 setUrl(null);
                 // console.log("data folder :", data);
                 // si c'est le première requête sur les deviants
                 if (nextOffset === -1)  {
-                    console.log("Premier demande requete")
                     setDeviants([...data.results]);
                 } else { // si il y'en a d'autre à faire
                     setDeviants([...deviants, ...data.results]);
@@ -157,17 +161,39 @@ function Home(props) {
             } else if (url === "Copy") {
                 // Copie des deviations
                 setUrl(null);
-                if (deviants.length > ((nextOffsetC + 1) * 24)) {
-                    console.log("NextOffC");
+                if (deviants.length > ((nextOffsetC + 1) * 24)) { //copie des éléments pas groupe de 24
                     setNextOffsetC(nextOffsetC + 1);
-                } else {
+                } else { //fin de copie
                     setNextOffsetC(0);
                 }
             } 
         }
     }, [data])
 
-    // vérification que l'on possède tous les déviants
+    // useEffect |================| Gestion erreur
+    useEffect(() => {
+        if (error) {
+            setError(false);
+            // token invalidé durant la connection
+            if (data.error === "invalid_token") {
+                console.log("Sect erreur durant utilisation invalide token");
+                //demander un nouveau token
+                setUrl("Token")
+
+                //form pour récupération d'un nouveau Token
+                const formData = new FormData();
+                formData.append('client_id', clientId);
+                formData.append('client_secret', clientSecret);
+                formData.append('grant_type', grant_type_refresh);
+                formData.append('refresh_token', accessRefresh);
+                setForm(formData)    
+                
+            }
+            
+        }
+    }, [error])
+
+    // useEffect |================| vérification que l'on possède tous les déviants
     useEffect(() => {
         
         // console.log("offset : ", nextOffset);
@@ -209,12 +235,11 @@ function Home(props) {
     }, [nextOffset])
 
 
-    // Copie de toutes les déviations
+    // useEffect |================| Copie de toutes les déviations
     useEffect(() => {
-        //formulaire pour réorganiser
         if (nextOffsetC > 0)
         {
-            console.log("here")
+            // création du formData pour la requetes POST
             const formData = new FormData();
             formData.append('access_token', accessToken);
             formData.append('target_folderid', selections[0].folderid);
@@ -222,10 +247,10 @@ function Home(props) {
 
             const start = Math.max((deviants.length - 24 * (nextOffsetC + 1)), 0);
             const end = deviants.length - 24 * nextOffsetC
-            for (let i = start; i < end; i++) {
+            for (let i = start; i < end; i++) {     
                 formData.append(`deviationids[${i}]`, deviants[i].deviationid)
             }
-            console.log("form : ", formData);
+            
 
         setForm(formData)
         setUrl("Copy")
@@ -233,7 +258,7 @@ function Home(props) {
         }
     }, [nextOffsetC])
 
-    // charger les dossiers après la connection
+    // useEffect |================| charger les dossiers après la connection
     useEffect (() => {
         if (chargeFolders) {
             //form pour récupération les dossiers
@@ -249,18 +274,7 @@ function Home(props) {
     }, [chargeFolders])
 
     // functions
-    // charge the folders
-    // const chargeFolders = () => {
-    //     setQueryParams(new URLSearchParams({
-    //         "access_token" : accessToken,
-    //         "ext_preload" : false,
-    //         "limit" : 50,}).toString());
-    //     setFolders([]);
-    //     setUrl("Folders");
-        
-    // }
-
-    // gérer les sélections
+    // function |================| gérer les sélections
     const handleSelect = (event, index) => {
         const selections_temp = [...selections];
         if (index === 0) {
@@ -275,7 +289,7 @@ function Home(props) {
     }
 
 
-    // Gére le traitement des deviants
+    // function |================| Gére le traitement des deviants
     const launchSelect = (event) => {
         if (event.key === "Enter") {
             if (selections[0] && selections[1]) {
