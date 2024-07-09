@@ -110,7 +110,7 @@ function Home(props) {
     useEffect(() => {
        
         if (data) {
-            // Vérification qu'une erreur ne x'est pas produite dans la requete
+            // Vérification qu'une erreur ne s'est pas produite dans la requete
             if (data.error) {
                 console.log("Error : ", data)
                 setTempUrl(url);
@@ -138,9 +138,13 @@ function Home(props) {
             } else if (url === "Folders") {
                 // Récupérations des dossiers
                 setFolders(data.results);
+                console.log("Folders-zone");
                 
                 // reprise de la requête en cours si y'en à une
                 if (tempUrl) {
+                    console.log("reprsie de fonction en cours");
+                    console.log("tempUrl : ", tempUrl);
+                    console.log("tempForm : ", tempForm);
                     setUrl(tempUrl);
                     setForm(tempForm);
                     setTempUrl(null);
@@ -177,6 +181,8 @@ function Home(props) {
             // token invalidé durant la connection
             if (data.error === "invalid_token") {
                 console.log("Sect erreur durant utilisation invalide token");
+                console.log("tempUrl - invalid_token: ", tempUrl);
+                console.log("tempForm - invalid_token: ", tempForm.getAll());
                 //demander un nouveau token
                 setUrl("Token")
 

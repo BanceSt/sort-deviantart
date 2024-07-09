@@ -2,7 +2,6 @@ export const sorts_types  = [
     {
         "name" : "aleatoire",
         "func" : (array) => {
-            console.log("Here func aleatoire");
             let shuffledArray = [...array];
             for (let i = array.length - 1; i > 0; i--) {
                 // console.log("Here func aleatoire ", array[i]);
@@ -12,7 +11,6 @@ export const sorts_types  = [
                 shuffledArray[i] = shuffledArray[j];
                 shuffledArray[j] = temp;
               }
-            console.log("a:", shuffledArray);
             return shuffledArray;
         }
         
