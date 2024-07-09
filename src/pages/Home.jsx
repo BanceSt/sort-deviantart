@@ -23,9 +23,11 @@ function Home(props) {
     // const [loginState, setLoginState] = useState(false);   
 
     // variable pour gérer les requêtes
+    const [error, setError] = useState(false);
     const [data, setData] = useState(null);
     const [form, setForm] = useState({});
     const [url, setUrl] = useState(null);
+    const [tempUrl, setTempUrl] = useState(null);
     const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
@@ -91,7 +93,10 @@ function Home(props) {
                 
                 setData(data_temp);
             } catch (err){
-                console.error(err);
+                console.error(err)
+                setTempUrl(url);
+                setUrl(null);
+                setError(true);
             } 
         }
 
@@ -99,9 +104,26 @@ function Home(props) {
         
     },[url]);
 
+    //Gestion erreur
+    useEffect(() => {
+        if (error) {
+            setError(false);
+        }
+    }, [error])
+
     // response treatment
     useEffect(() => {
+       
         if (data) {
+            // Vérification qu'une erreur ne x'est pas produite dans la requete
+            if (data.error) {
+                console.log("Erreor : ", data)
+                setTempUrl(url);
+                setUrl(null)
+                setError(true);
+                return
+            }
+
             if ((url === "Token") && data.access_token) {
                 // sauvegarde
                 console.log("TOKEN SAVE");
@@ -137,11 +159,11 @@ function Home(props) {
                 setUrl(null);
                 if (deviants.length > ((nextOffsetC + 1) * 24)) {
                     console.log("NextOffC");
-                    setNextOffsetC(nextOffsetC + 1)
+                    setNextOffsetC(nextOffsetC + 1);
                 } else {
-                    setNextOffsetC(0)
+                    setNextOffsetC(0);
                 }
-            }
+            } 
         }
     }, [data])
 
