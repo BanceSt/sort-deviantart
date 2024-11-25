@@ -28,7 +28,7 @@ function Home(props) {
     const [tempForm, setTempForm] = useState({});
 
     const [data, setData] = useState(null);
-    const [error, setError] = useState(false);
+    // const [error, setError] = useState(false);
     const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
@@ -51,8 +51,8 @@ function Home(props) {
             const formData = new FormData();
             formData.append('client_id', clientId);
             formData.append('client_secret', clientSecret);
-            formData.append('grant_type', grant_type_refresh);
-            formData.append('refresh_token', accessRefresh);
+            formData.append('code', code);
+            formData.append('grant_type', grant_type_autho);
             setForm(formData)
         }
         // Token plus à jour 
@@ -97,7 +97,7 @@ function Home(props) {
                 setTempUrl(url);                                        //si l'erreur arrive durant une requête récupération de la requête en cours
                 setTempForm(form);
                 setUrl(null);
-                setError(true);
+                // setError(true);
             } 
         }
 
@@ -116,7 +116,7 @@ function Home(props) {
                 setTempUrl(url);
                 setTempForm(form);
                 setUrl(null)
-                setError(true);
+                // setError(true);
                 return
             }
 
@@ -175,29 +175,29 @@ function Home(props) {
     }, [data])
 
     // useEffect |================| Gestion erreur
-    useEffect(() => {
-        if (error) {
-            setError(false);
-            // token invalidé durant la connection
-            if (data.error === "invalid_token") {
-                console.log("Sect erreur durant utilisation invalide token");
-                console.log("tempUrl - invalid_token: ", tempUrl);
-                console.log("tempForm - invalid_token: ", tempForm.getAll());
-                //demander un nouveau token
-                setUrl("Token")
+    // useEffect(() => {
+    //     if (error) {
+    //         // setError(false);
+    //         // token invalidé durant la connection
+    //         if (data.error === "invalid_token") {
+    //             console.log("Sect erreur durant utilisation invalide token");
+    //             console.log("tempUrl - invalid_token: ", tempUrl);
+    //             console.log("tempForm - invalid_token: ", tempForm.getAll());
+    //             //demander un nouveau token
+    //             setUrl("Token")
 
-                //form pour récupération d'un nouveau Token
-                const formData = new FormData();
-                formData.append('client_id', clientId);
-                formData.append('client_secret', clientSecret);
-                formData.append('grant_type', grant_type_refresh);
-                formData.append('refresh_token', accessRefresh);
-                setForm(formData)    
+    //             //form pour récupération d'un nouveau Token
+    //             const formData = new FormData();
+    //             formData.append('client_id', clientId);
+    //             formData.append('client_secret', clientSecret);
+    //             formData.append('grant_type', grant_type_refresh);
+    //             formData.append('refresh_token', accessRefresh);
+    //             setForm(formData)    
                 
-            }
+    //         }
             
-        }
-    }, [error])
+    //     }
+    // }, [error])
 
     // useEffect |================| vérification que l'on possède tous les déviants
     useEffect(() => {
