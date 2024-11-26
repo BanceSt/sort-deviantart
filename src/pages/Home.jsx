@@ -24,14 +24,15 @@ function Home(props) {
     const [chargeFolders, setChargeFolders] = useState(false);
 
     // variable pour gérer les requêtes
-    const [url, setUrl] = useState(null);
-    const [form, setForm] = useState({});
-    const [tempUrl, setTempUrl] = useState(null);
+    // const [url, setUrl] = useState(null);
+    const url = useRef("");
+    // const [form, setForm] = useState({});
+    // const [tempUrl, setTempUrl] = useState(null);
     const [tempForm, setTempForm] = useState({});
 
     const [data, setData] = useState(null);
     // const [error, setError] = useState(false);
-    const [queryParams, setQueryParams] = useState("");
+    // const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
     const [nextOffset, setNextOffset] = useState(-1);
@@ -40,6 +41,30 @@ function Home(props) {
         "", "", ""
     ]);
 
+    // ===================================== func call api =================================
+    // function request api
+    async function fetch_data(formParam, queryParams = "") {
+        try {
+            //Récupération de l'url complete
+            const url_fl = urls[url.current](queryParams);
+
+            // Emmetre la requête est récupération de la réponse
+            const response = await fetch(url_fl, {
+                method : "POST",
+                body : formParam
+            });
+            const data_temp = await response.json();
+            setData(data_temp);
+
+        } catch (err){
+            // Capture des erreurs,
+            console.error(err)
+            // setTempUrl(url);                                        si l'erreur arrive durant une requête récupération de la requête en cours
+            setTempForm(formParam);
+            // setUrl(null);
+            // setError(true);
+        } 
+    }
 
     // ===================================== useEffect ===================================== 
     // useEffect |================| Récupération de token
@@ -47,7 +72,8 @@ function Home(props) {
         // Vérification pour la premier connection
         if (code && !accessToken) {
             console.log("Token premier connection");
-            setUrl("Token")
+            // Sélection de l'url
+            url.current = "Token"
 
             //form pour récupération de Token
             const formData = new FormData();
@@ -55,12 +81,16 @@ function Home(props) {
             formData.append('client_secret', clientSecret);
             formData.append('code', code);
             formData.append('grant_type', grant_type_autho);
-            setForm(formData)
+            
+            // call api pour recevoir un token
+            fetch_data(formData)
         }
+
         // Token plus à jour 
         else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
             console.log("token par refresh");
-            setUrl("Token")
+            // Sélection de l'url
+            url.current = "Token"
 
             //form pour récupération d'un nouveau Token
             const formData = new FormData();
@@ -68,7 +98,9 @@ function Home(props) {
             formData.append('client_secret', clientSecret);
             formData.append('grant_type', grant_type_refresh);
             formData.append('refresh_token', accessRefresh);
-            setForm(formData)    
+
+            // call api pour rafraîchir le token
+            fetch_data(formData)    
         }
         // Token toujours bon
         else {
@@ -77,37 +109,6 @@ function Home(props) {
         }
     }, [])
 
-    // useEffect |================| request api deviantart
-    useEffect(() => {
-        // function request api
-        async function fetch_data() {
-            try {
-                //Récupération de l'url complete
-                const url_fl = urls[url](queryParams);
-
-                // Emmetre la requête est récupération de la réponse
-                const response = await fetch(url_fl, {
-                    method : "POST",
-                    body : form
-                });
-                const data_temp = await response.json();
-                setData(data_temp);
-
-            } catch (err){
-                // Capture des erreurs,
-                console.error(err)
-                setTempUrl(url);                                        //si l'erreur arrive durant une requête récupération de la requête en cours
-                setTempForm(form);
-                setUrl(null);
-                // setError(true);
-            } 
-        }
-
-        // déclenche si on a une url
-        if (url) fetch_data();
-        
-    },[url]);
-
     // =====================================  response treatment
     useEffect(() => {
        
@@ -115,17 +116,18 @@ function Home(props) {
             // Vérification qu'une erreur ne s'est pas produite dans la requete
             if (data.error) {
                 console.log("Error : ", data)
-                setTempUrl(url);
-                setTempForm(form);
-                setUrl(null)
+                // setTempUrl(url);
+                // setTempForm(form);
+                url.current = null
                 // setError(true);
                 return
             }
 
             // 
-            if ((url === "Token") && data.access_token) {
+            if ((url.current === "Token") && data.access_token) {
                 // sauvegarde des tokens et du temps de sauvagarde
                 console.log("TOKEN SAVE");
+
                 const tokenTime = Date.now() / 1000;
                 window.localStorage.setItem("access_token", data.access_token);
                 window.localStorage.setItem("refresh_token", data.refresh_token);
@@ -137,24 +139,25 @@ function Home(props) {
 
                 //Chargement des dossiers
                 setChargeFolders(true);
-            } else if (url === "Folders") {
+            } else if (url.current === "Folders") {
                 // Récupérations des dossiers
                 setFolders(data.results);
                 console.log("Folders-zone");
                 
                 // reprise de la requête en cours si y'en à une
-                if (tempUrl) {
-                    console.log("reprsie de fonction en cours");
-                    console.log("tempUrl : ", tempUrl);
-                    console.log("tempForm : ", tempForm);
-                    setUrl(tempUrl);
-                    setForm(tempForm);
-                    setTempUrl(null);
-                    setTempForm({});
-                }
-            } else if (url === "Folder") {
+                // if (tempUrl) {
+                //     console.log("reprsie de fonction en cours");
+                //     console.log("tempUrl : ", tempUrl);
+                //     console.log("tempForm : ", tempForm);
+                //     setUrl(tempUrl);
+                //     setForm(tempForm);
+                //     setTempUrl(null);
+                //     setTempForm({});
+                // }
+            } else if (url.current === "Folder") {
                 // Récupération des deviations
-                setUrl(null);
+     
+
                 // console.log("data folder :", data);
                 // si c'est le première requête sur les deviants
                 if (nextOffset === -1)  {
@@ -164,9 +167,8 @@ function Home(props) {
                 }
                 setNextOffset(data.next_offset);                               // y'a t'il d'autre deviants à récupérer
                 
-            } else if (url === "Copy") {
+            } else if (url.current === "Copy") {
                 // Copie des deviations
-                setUrl(null);
                 if (deviants.length > ((nextOffsetC + 1) * 24)) { //copie des éléments pas groupe de 24
                     setNextOffsetC(nextOffsetC + 1);
                 } else { //fin de copie
@@ -204,18 +206,25 @@ function Home(props) {
     // useEffect |================| vérification que l'on possède tous les déviants
     useEffect(() => {
         
-        // console.log("offset : ", nextOffset);
+        // Reste t'il des requêtes à éffectuer
         if (nextOffset !== -1) {
             console.log("deviants : ", deviants);
 
+            // Récupération des deviations
             if (nextOffset) {
                 console.log("x demande requete")
-                setQueryParams(new URLSearchParams({
-                    "access_token" : accessToken,
-                    "offset": nextOffset,
-                    "limit" : 24,
-                    "mature_content" : true}).toString());
-                    setUrl("Folder")
+                // Sélection de l'url pour récupérer des éléments dans un dossier
+                url.current = "Folder"
+
+                const queryParams = new URLSearchParams({
+                                        "access_token" : accessToken,
+                                        "offset": nextOffset,
+                                        "limit" : 24,
+                                        "mature_content" : true}).toString();
+
+                // call api pour récupérer les deviations
+                fetch_data({}, queryParams)
+            // Fin de récupération des deviations
             } else {
                 setNextOffset(-1)
                 // console.log("tempFolder before treatement : ", deviants)
@@ -223,8 +232,8 @@ function Home(props) {
                 setDeviants([...tempdeviants]);
                 // console.log("tempFolder after treatement : ", tempdeviants)
                 console.log("End request");
-
-                //requête de copy
+                // Sélection de l'url pour copier des éléments dans un dossier
+                url.current = "Copy"
 
                 //formulaire pour réorganiser
                 const formData = new FormData();
@@ -235,8 +244,8 @@ function Home(props) {
                     formData.append(`deviationids[${i}]`, tempdeviants[i].deviationid)
                 }
 
-                setForm(formData)
-                setUrl("Copy")
+                // call api pour copier les deviations
+                fetch_data(formData)
 
             }
         }
@@ -247,6 +256,9 @@ function Home(props) {
     useEffect(() => {
         if (nextOffsetC > 0)
         {
+            // Sélection de l'url pour copier des éléments dans un dossier
+            url.current = "Copy"
+
             // création du formData pour la requetes POST
             const formData = new FormData();
             formData.append('access_token', accessToken);
@@ -258,26 +270,29 @@ function Home(props) {
             for (let i = start; i < end; i++) {     
                 formData.append(`deviationids[${i}]`, deviants[i].deviationid)
             }
-            
 
-        setForm(formData)
-        setUrl("Copy")
-
+            // call api pour copier les deviations
+            fetch_data(formData)
         }
     }, [nextOffsetC])
 
     // useEffect |================| charger les dossiers après la connection
     useEffect (() => {
         if (chargeFolders) {
+            // Sélection de l'url pour récupérer les dossiers
+            url.current = "Folders"
+
+            // Aucun dossiers au début
+            setFolders([]);
+
             //form pour récupération les dossiers
             const formData = new FormData();
             formData.append('access_token', accessToken);
             formData.append('ext_preload', false);
             formData.append('limit', 50);
-
-            setForm(formData) 
-            setFolders([]);
-            setUrl("Folders");
+            
+            // call api pour récupérer les dossiers
+            fetch_data(formData)
         }
     }, [chargeFolders])
 
@@ -305,16 +320,20 @@ function Home(props) {
                 setFolderId(selections[0].folderid);
 
                 // form pour récupérer les deviations
-                const formData = new FormData();
-                formData.append('access_token', accessToken);
-                setForm(formData) 
+                // const formData = new FormData();
+                // formData.append('access_token', accessToken);
 
-                setQueryParams(new URLSearchParams({
-                    "access_token" : accessToken,
-                    "offset": 0,
-                    "limit" : 24,
-                    "mature_content" : true}).toString());
-                setUrl("Folder");
+                // Sélection de l'url pour récupérer des éléments dans un dossier
+                url.current = "Folder"
+
+                const queryParams = new URLSearchParams({
+                                        "access_token" : accessToken,
+                                        "offset": 0,
+                                        "limit" : 24,
+                                        "mature_content" : true}).toString();
+
+                // call api pour récupérer les deviations
+                fetch_data({}, queryParams)
             }
              
         }
