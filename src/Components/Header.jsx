@@ -14,9 +14,7 @@ function Header({access_token}) {
     //Comportement
 
     const handleLoginButtonClick = () => {
-
-        console.log(clientIdRef.current.value);
-        console.log(clientSecretRef.current.value);
+        // Fonction de gestion de la connexion
 
         //sauvegarde des infos de connection
         window.localStorage.setItem("Client_id", clientIdRef.current.value);

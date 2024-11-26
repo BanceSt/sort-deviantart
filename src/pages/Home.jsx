@@ -5,6 +5,8 @@ import { grant_type_autho, grant_type_refresh, redirect_uri } from '../assets/pa
 import "../styles/Home.css"
 import Box from '../Components/Box';
 import { sorts_types } from '../assets/params/func_sort';
+import "../db/db"
+
 
 //client_id=${client_id}&client_secret=${client_secret}&grant_type=${grant_type}&code=${code}&redirect_uri=${redirect_uri}
 function Home(props) {
