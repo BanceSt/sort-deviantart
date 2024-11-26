@@ -18,7 +18,7 @@ function Home(props) {
     const clientSecret = window.localStorage.getItem("Client_secret");
     const code = urlParam.get('code');
 
-    const [chargeFolders, setChargeFolders] = useState(false);
+    // const [chargeFolders, setChargeFolders] = useState(false);
 
     // variable pour gérer les requêtes
     const url = useRef("");
@@ -60,6 +60,24 @@ function Home(props) {
         } 
     }
 
+    // function de récupération des dossiers
+    function charge_folder() {
+        // Sélection de l'url pour récupérer les dossiers
+        url.current = "Folders"
+
+        // Aucun dossiers au début
+        setFolders([]);
+
+        //form pour récupération les dossiers
+        const formData = new FormData();
+        formData.append('access_token', window.localStorage.getItem("access_token"));
+        formData.append('ext_preload', false);
+        formData.append('limit', 50);
+        
+        // call api pour récupérer les dossiers
+        fetch_data(formData)
+    }
+
     // ===================================== useEffect ===================================== 
     // useEffect |================| Récupération de token
     useEffect(() => {
@@ -99,7 +117,7 @@ function Home(props) {
         // Token toujours bon
         else {
             console.log("token non necessaire");
-            setChargeFolders(true);
+            charge_folder();
         }
     }, [])
 
@@ -128,7 +146,7 @@ function Home(props) {
                 window.localStorage.setItem("access_token_time", tokenTime);
 
                 //Chargement des dossiers
-                setChargeFolders(true);
+                charge_folder();
             } else if (url.current === "Folders") {
                 // Récupérations des dossiers
                 setFolders(data.results);
@@ -265,26 +283,6 @@ function Home(props) {
             fetch_data(formData)
         }
     }, [nextOffsetC])
-
-    // useEffect |================| charger les dossiers après la connection
-    useEffect (() => {
-        if (chargeFolders) {
-            // Sélection de l'url pour récupérer les dossiers
-            url.current = "Folders"
-
-            // Aucun dossiers au début
-            setFolders([]);
-
-            //form pour récupération les dossiers
-            const formData = new FormData();
-            formData.append('access_token', window.localStorage.getItem("access_token"));
-            formData.append('ext_preload', false);
-            formData.append('limit', 50);
-            
-            // call api pour récupérer les dossiers
-            fetch_data(formData)
-        }
-    }, [chargeFolders])
 
     // functions
     // function |================| gérer les sélections
