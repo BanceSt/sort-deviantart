@@ -8,17 +8,15 @@ import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
 
 
-//client_id=${client_id}&client_secret=${client_secret}&grant_type=${grant_type}&code=${code}&redirect_uri=${redirect_uri}
+const CLIENT_ID = window.localStorage.getItem("Client_id");
+const CLIENT_SECRET = window.localStorage.getItem("Client_secret");
+
 function Home(props) {
     // Vérification de l'url
     const urlParam = new URLSearchParams(window.location.search);
 
     // Récupération des identifiants
-    const clientId = window.localStorage.getItem("Client_id");
-    const clientSecret = window.localStorage.getItem("Client_secret");
     const code = urlParam.get('code');
-
-    // const [chargeFolders, setChargeFolders] = useState(false);
 
     // variable pour gérer les requêtes
     const url = useRef("");
@@ -81,6 +79,9 @@ function Home(props) {
     // ===================================== useEffect ===================================== 
     // useEffect |================| Récupération de token
     useEffect(() => {
+        // 
+        const token_age = window.localStorage.getItem("access_token_time") ?? (Date.now() / 1000);
+
         // Vérification pour la premier connection
         if (code && !window.localStorage.getItem("access_token")) {
             console.log("Token premier connection");
@@ -89,25 +90,26 @@ function Home(props) {
 
             //form pour récupération de Token
             const formData = new FormData();
-            formData.append('client_id', clientId);
-            formData.append('client_secret', clientSecret);
+            formData.append('client_id', CLIENT_ID);
+            formData.append('client_secret', CLIENT_SECRET);
             formData.append('code', code);
             formData.append('grant_type', grant_type_autho);
+            formData.append('redirect_uri', redirect_uri);
             
             // call api pour recevoir un token
             fetch_data(formData)
         }
 
         // Token plus à jour 
-        else if ( ((Date.now() / 1000) - window.localStorage.getItem("access_token_time")) > 3600) {
+        else if ( ((Date.now() / 1000) - token_age) > 3600) {
             console.log("token par refresh");
             // Sélection de l'url
             url.current = "Token"
 
             //form pour récupération d'un nouveau Token
             const formData = new FormData();
-            formData.append('client_id', clientId);
-            formData.append('client_secret', clientSecret);
+            formData.append('client_id', CLIENT_ID);
+            formData.append('client_secret', CLIENT_SECRET);
             formData.append('grant_type', grant_type_refresh);
             formData.append('refresh_token', window.localStorage.getItem("refresh_token"));
 
@@ -115,7 +117,7 @@ function Home(props) {
             fetch_data(formData)    
         }
         // Token toujours bon
-        else {
+        else if (window.localStorage.getItem("access_token")) {
             console.log("token non necessaire");
             charge_folder();
         }
