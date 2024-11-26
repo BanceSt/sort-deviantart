@@ -18,21 +18,15 @@ function Home(props) {
     const clientSecret = window.localStorage.getItem("Client_secret");
     const code = urlParam.get('code');
 
-    const [accessToken, setAccessToken] = useState(window.localStorage.getItem("access_token"));
-    const [accessRefresh, setRefreshToken] = useState(window.localStorage.getItem("refresh_token"));
-    const [accessTokenTime, setAccessTokenTime] = useState(window.localStorage.getItem("access_token_time"));
     const [chargeFolders, setChargeFolders] = useState(false);
 
     // variable pour gérer les requêtes
-    // const [url, setUrl] = useState(null);
     const url = useRef("");
-    // const [form, setForm] = useState({});
     // const [tempUrl, setTempUrl] = useState(null);
     const [tempForm, setTempForm] = useState({});
 
     const [data, setData] = useState(null);
     // const [error, setError] = useState(false);
-    // const [queryParams, setQueryParams] = useState("");
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState(null);
     const [nextOffset, setNextOffset] = useState(-1);
@@ -70,7 +64,7 @@ function Home(props) {
     // useEffect |================| Récupération de token
     useEffect(() => {
         // Vérification pour la premier connection
-        if (code && !accessToken) {
+        if (code && !window.localStorage.getItem("access_token")) {
             console.log("Token premier connection");
             // Sélection de l'url
             url.current = "Token"
@@ -87,7 +81,7 @@ function Home(props) {
         }
 
         // Token plus à jour 
-        else if ( ((Date.now() / 1000) - accessTokenTime) > 3600) {
+        else if ( ((Date.now() / 1000) - window.localStorage.getItem("access_token_time")) > 3600) {
             console.log("token par refresh");
             // Sélection de l'url
             url.current = "Token"
@@ -97,7 +91,7 @@ function Home(props) {
             formData.append('client_id', clientId);
             formData.append('client_secret', clientSecret);
             formData.append('grant_type', grant_type_refresh);
-            formData.append('refresh_token', accessRefresh);
+            formData.append('refresh_token', window.localStorage.getItem("refresh_token"));
 
             // call api pour rafraîchir le token
             fetch_data(formData)    
@@ -132,10 +126,6 @@ function Home(props) {
                 window.localStorage.setItem("access_token", data.access_token);
                 window.localStorage.setItem("refresh_token", data.refresh_token);
                 window.localStorage.setItem("access_token_time", tokenTime);
-    
-                setAccessToken(data.access_token);
-                setRefreshToken(data.refresh_token);
-                setAccessTokenTime(tokenTime);
 
                 //Chargement des dossiers
                 setChargeFolders(true);
@@ -217,7 +207,7 @@ function Home(props) {
                 url.current = "Folder"
 
                 const queryParams = new URLSearchParams({
-                                        "access_token" : accessToken,
+                                        "access_token" : window.localStorage.getItem("access_token"),
                                         "offset": nextOffset,
                                         "limit" : 24,
                                         "mature_content" : true}).toString();
@@ -237,7 +227,7 @@ function Home(props) {
 
                 //formulaire pour réorganiser
                 const formData = new FormData();
-                formData.append('access_token', accessToken);
+                formData.append('access_token', window.localStorage.getItem("access_token"));
                 formData.append('target_folderid', selections[0].folderid);
                 formData.append("mature_content", true);
                 for (let i = Math.max((tempdeviants.length - 24), 0); i < tempdeviants.length; i++) {
@@ -261,7 +251,7 @@ function Home(props) {
 
             // création du formData pour la requetes POST
             const formData = new FormData();
-            formData.append('access_token', accessToken);
+            formData.append('access_token', window.localStorage.getItem("access_token"));
             formData.append('target_folderid', selections[0].folderid);
             formData.append("mature_content", true);
 
@@ -287,7 +277,7 @@ function Home(props) {
 
             //form pour récupération les dossiers
             const formData = new FormData();
-            formData.append('access_token', accessToken);
+            formData.append('access_token', window.localStorage.getItem("access_token"));
             formData.append('ext_preload', false);
             formData.append('limit', 50);
             
@@ -327,7 +317,7 @@ function Home(props) {
                 url.current = "Folder"
 
                 const queryParams = new URLSearchParams({
-                                        "access_token" : accessToken,
+                                        "access_token" : window.localStorage.getItem("access_token"),
                                         "offset": 0,
                                         "limit" : 24,
                                         "mature_content" : true}).toString();
@@ -342,9 +332,9 @@ function Home(props) {
 
     return (
         <div className='ccontainer' onKeyDown={launchSelect} tabIndex="0"> 
-            <Header access_token={accessToken}/>
+            <Header access_token={window.localStorage.getItem("access_token")}/>
             {
-                !accessToken ? 
+                !window.localStorage.getItem("access_token") ? 
                 <h1> nope yet </h1> :
 
                 <div className="main">
