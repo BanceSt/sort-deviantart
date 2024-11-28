@@ -20,15 +20,15 @@ function Home(props) {
 
     // variable pour gérer les requêtes
     const url = useRef("");
+    const block_call_api = useRef(false);
     // const [tempUrl, setTempUrl] = useState(null);
     const [tempForm, setTempForm] = useState({});
 
     const [data, setData] = useState(null);
     // const [error, setError] = useState(false);
     const [folders, setFolders] = useState(null);
-    const [deviants, setDeviants] = useState(null);
+    const [deviants, setDeviants] = useState([]);
     const [nextOffset, setNextOffset] = useState(-1);
-    const [nextOffsetC, setNextOffsetC] = useState(0);
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
@@ -73,6 +73,37 @@ function Home(props) {
         formData.append('limit', 50);
         
         // call api pour récupérer les dossiers
+        fetch_data(formData)
+    }
+
+    // function pour récupérer des deviations
+    function charge_deviations() {
+        const queryParams = new URLSearchParams({
+                                        "access_token" : window.localStorage.getItem("access_token"),
+                                        "offset": nextOffset,
+                                        "limit" : 24,
+                                        "mature_content" : true}).toString();
+
+        // call api pour récupérer les deviations
+        fetch_data({}, queryParams)
+    }
+
+    // function pour copier des deviations
+    function copy_deviations() {
+        // création du formData pour la requetes POST
+        const formData = new FormData();
+        formData.append('access_token', window.localStorage.getItem("access_token"));
+        formData.append('target_folderid', selections[0].folderid);
+        formData.append("mature_content", true);
+        
+        const start = Math.max((deviants.length - 24 * (nextOffset + 1)), 0);
+        const end = deviants.length - 24 * nextOffset
+        
+        for (let i = start; i < end; i++) {     
+            formData.append(`deviationids[${i}]`, deviants[i].deviationid)
+        }
+        
+        // call api pour copier les deviations
         fetch_data(formData)
     }
 
@@ -167,22 +198,33 @@ function Home(props) {
             } else if (url.current === "Folder") {
                 // Récupération des deviations
      
-
-                // console.log("data folder :", data);
-                // si c'est le première requête sur les deviants
-                if (nextOffset === -1)  {
-                    setDeviants([...data.results]);
-                } else { // si il y'en a d'autre à faire
-                    setDeviants([...deviants, ...data.results]);
+                if (data.next_offset) {
+  
+                    // si c'est le première requête sur les deviants
+                    if (nextOffset === 0)  {
+                        setDeviants([...data.results]);
+                    } else { // si il y'en a d'autre à faire
+                        setDeviants([...deviants, ...data.results]);
+                    }
+                    setNextOffset(data.next_offset);  // y'a t'il d'autre deviants à récupérer
                 }
-                setNextOffset(data.next_offset);                               // y'a t'il d'autre deviants à récupérer
+                else  {
+
+                    let tempdeviants = selections[1].func([...deviants, ...data.results]);
+                    url.current = "Copy";
+                    setDeviants([...tempdeviants]); 
+                    setNextOffset(tempdeviants.length > 24 ? 0 : -2);        
+                }
                 
             } else if (url.current === "Copy") {
                 // Copie des deviations
-                if (deviants.length > ((nextOffsetC + 1) * 24)) { //copie des éléments pas groupe de 24
-                    setNextOffsetC(nextOffsetC + 1);
+                if (deviants.length > ((nextOffset + 1) * 24)) { //copie des éléments pas groupe de 24
+                    setNextOffset(nextOffset + 1);
                 } else { //fin de copie
-                    setNextOffsetC(0);
+                    setNextOffset(-1);
+                    setDeviants([]);
+                    block_call_api.current = false;
+                    console.log("....End")
                 }
             } 
         }
@@ -217,74 +259,12 @@ function Home(props) {
     useEffect(() => {
         
         // Reste t'il des requêtes à éffectuer
-        if (nextOffset !== -1) {
-            console.log("deviants : ", deviants);
-
-            // Récupération des deviations
-            if (nextOffset) {
-                console.log("x demande requete")
-                // Sélection de l'url pour récupérer des éléments dans un dossier
-                url.current = "Folder"
-
-                const queryParams = new URLSearchParams({
-                                        "access_token" : window.localStorage.getItem("access_token"),
-                                        "offset": nextOffset,
-                                        "limit" : 24,
-                                        "mature_content" : true}).toString();
-
-                // call api pour récupérer les deviations
-                fetch_data({}, queryParams)
-            // Fin de récupération des deviations
-            } else {
-                setNextOffset(-1)
-                // console.log("tempFolder before treatement : ", deviants)
-                let tempdeviants = selections[1].func([...deviants]);
-                setDeviants([...tempdeviants]);
-                // console.log("tempFolder after treatement : ", tempdeviants)
-                console.log("End request");
-                // Sélection de l'url pour copier des éléments dans un dossier
-                url.current = "Copy"
-
-                //formulaire pour réorganiser
-                const formData = new FormData();
-                formData.append('access_token', window.localStorage.getItem("access_token"));
-                formData.append('target_folderid', selections[0].folderid);
-                formData.append("mature_content", true);
-                for (let i = Math.max((tempdeviants.length - 24), 0); i < tempdeviants.length; i++) {
-                    formData.append(`deviationids[${i}]`, tempdeviants[i].deviationid)
-                }
-
-                // call api pour copier les deviations
-                fetch_data(formData)
-
-            }
-        }
+        if (nextOffset >= 0) {
+            // console.log("Deviations : ", deviants)
+            if (url.current === "Folder") charge_deviations();
+            else if (url.current === "Copy") copy_deviations();
+        } else if (nextOffset === -2) setNextOffset(0);
     }, [nextOffset])
-
-
-    // useEffect |================| Copie de toutes les déviations
-    useEffect(() => {
-        if (nextOffsetC > 0)
-        {
-            // Sélection de l'url pour copier des éléments dans un dossier
-            url.current = "Copy"
-
-            // création du formData pour la requetes POST
-            const formData = new FormData();
-            formData.append('access_token', window.localStorage.getItem("access_token"));
-            formData.append('target_folderid', selections[0].folderid);
-            formData.append("mature_content", true);
-
-            const start = Math.max((deviants.length - 24 * (nextOffsetC + 1)), 0);
-            const end = deviants.length - 24 * nextOffsetC
-            for (let i = start; i < end; i++) {     
-                formData.append(`deviationids[${i}]`, deviants[i].deviationid)
-            }
-
-            // call api pour copier les deviations
-            fetch_data(formData)
-        }
-    }, [nextOffsetC])
 
     // functions
     // function |================| gérer les sélections
@@ -304,26 +284,22 @@ function Home(props) {
 
     // function |================| Gére le traitement des deviants
     const launchSelect = (event) => {
-        if (event.key === "Enter") {
+        if (((event.key === "Enter") || (event.target.className === "btn_start")) 
+            && (!block_call_api.current)) {
+            console.log("PRESS");
             if (selections[0] && selections[1]) {
+                console.log("Start....Folder : " + selections[0].name + "......Sort_type :" + selections[1].name + ".");
+                // on block la possibilité de réaliser des commandes
+                block_call_api.current = true;
+
                 // Sélection du dossier
                 setFolderId(selections[0].folderid);
-
-                // form pour récupérer les deviations
-                // const formData = new FormData();
-                // formData.append('access_token', accessToken);
 
                 // Sélection de l'url pour récupérer des éléments dans un dossier
                 url.current = "Folder"
 
-                const queryParams = new URLSearchParams({
-                                        "access_token" : window.localStorage.getItem("access_token"),
-                                        "offset": 0,
-                                        "limit" : 24,
-                                        "mature_content" : true}).toString();
-
-                // call api pour récupérer les deviations
-                fetch_data({}, queryParams)
+                // Démarrage de récupération des dossiers
+                setNextOffset(0)
             }
              
         }
@@ -345,9 +321,12 @@ function Home(props) {
                             <Box index={2} name="LOG" />
                         </div>
                     </div>
-                </div>
 
-                
+                    {/* bouton d'éxécution */}
+                    <button className="btn_start" onClick={launchSelect}>
+                        LANCER
+                    </button>
+                </div>
             }
         </div>
     );
