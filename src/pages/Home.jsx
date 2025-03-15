@@ -6,6 +6,7 @@ import "../styles/Home.css"
 import Box from '../Components/Box';
 import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
+import Notification from '../Components/Notification';
 
 
 const CLIENT_ID = window.localStorage.getItem("Client_id");
@@ -20,12 +21,11 @@ function Home(props) {
 
     // variable pour gérer les requêtes
     const url = useRef("");
+    const error = useRef(false);
     const block_call_api = useRef(false);
-    // const [tempUrl, setTempUrl] = useState(null);
-    const [tempForm, setTempForm] = useState({});
+    const [infoNotif, setInfoNotif] = useState({});
 
     const [data, setData] = useState(null);
-    // const [error, setError] = useState(false);
     const [folders, setFolders] = useState(null);
     const [deviants, setDeviants] = useState([]);
     const [nextOffset, setNextOffset] = useState(-1);
@@ -51,10 +51,7 @@ function Home(props) {
         } catch (err){
             // Capture des erreurs,
             console.error(err)
-            // setTempUrl(url);                                        si l'erreur arrive durant une requête récupération de la requête en cours
-            setTempForm(formParam);
-            // setUrl(null);
-            // setError(true);
+            error.current = true
         } 
     }
 
@@ -157,17 +154,7 @@ function Home(props) {
     // =====================================  response treatment
     useEffect(() => {
        
-        if (data) {
-            // Vérification qu'une erreur ne s'est pas produite dans la requete
-            if (data.error) {
-                console.log("Error : ", data)
-                // setTempUrl(url);
-                // setTempForm(form);
-                url.current = null
-                // setError(true);
-                return
-            }
-
+        if (data && !(error.current)) {
             // 
             if ((url.current === "Token") && data.access_token) {
                 // sauvegarde des tokens et du temps de sauvagarde
@@ -185,19 +172,8 @@ function Home(props) {
                 setFolders(data.results);
                 console.log("Folders-zone");
                 
-                // reprise de la requête en cours si y'en à une
-                // if (tempUrl) {
-                //     console.log("reprsie de fonction en cours");
-                //     console.log("tempUrl : ", tempUrl);
-                //     console.log("tempForm : ", tempForm);
-                //     setUrl(tempUrl);
-                //     setForm(tempForm);
-                //     setTempUrl(null);
-                //     setTempForm({});
-                // }
             } else if (url.current === "Folder") {
                 // Récupération des deviations
-     
                 if (data.next_offset) {
   
                     // si c'est le première requête sur les deviants
@@ -227,33 +203,14 @@ function Home(props) {
                     console.log("....End")
                 }
             } 
+        } else if (error.current) {
+            console.log("It's him")
+            setInfoNotif({
+                "message" : data.error
+            })
         }
     }, [data])
 
-    // useEffect |================| Gestion erreur
-    // useEffect(() => {
-    //     if (error) {
-    //         // setError(false);
-    //         // token invalidé durant la connection
-    //         if (data.error === "invalid_token") {
-    //             console.log("Sect erreur durant utilisation invalide token");
-    //             console.log("tempUrl - invalid_token: ", tempUrl);
-    //             console.log("tempForm - invalid_token: ", tempForm.getAll());
-    //             //demander un nouveau token
-    //             setUrl("Token")
-
-    //             //form pour récupération d'un nouveau Token
-    //             const formData = new FormData();
-    //             formData.append('client_id', clientId);
-    //             formData.append('client_secret', clientSecret);
-    //             formData.append('grant_type', grant_type_refresh);
-    //             formData.append('refresh_token', accessRefresh);
-    //             setForm(formData)    
-                
-    //         }
-            
-    //     }
-    // }, [error])
 
     // useEffect |================| vérification que l'on possède tous les déviants
     useEffect(() => {
@@ -265,6 +222,25 @@ function Home(props) {
             else if (url.current === "Copy") copy_deviations();
         } else if (nextOffset === -2) setNextOffset(0);
     }, [nextOffset])
+
+    // useEffect |================| Notification
+    useEffect(() => {
+        let timeout = false
+        if (Object.keys(infoNotif).length !== 0) {
+            console.log("hererere")
+            timeout = setTimeout(() => {
+                setInfoNotif({})
+            }, 5000)
+        }
+
+
+        return () => {
+            if (timeout) {
+                clearTimeout(timeout)
+                setInfoNotif({})
+            }
+        }
+    }, [infoNotif])
 
     // functions
     // function |================| gérer les sélections
@@ -289,17 +265,22 @@ function Home(props) {
             console.log("PRESS");
             if (selections[0] && selections[1]) {
                 console.log("Start....Folder : " + selections[0].name + "......Sort_type :" + selections[1].name + ".");
+                setInfoNotif({
+                    "type" : "notification_start",
+                    "message" : "Lancemenet du rangement de " + selections[0].name + " avec la function " + selections[1].name + ".",
+                    "activate" : true
+                })
                 // on block la possibilité de réaliser des commandes
-                block_call_api.current = true;
+                // block_call_api.current = true;
 
                 // Sélection du dossier
-                setFolderId(selections[0].folderid);
+                // setFolderId(selections[0].folderid);
 
                 // Sélection de l'url pour récupérer des éléments dans un dossier
-                url.current = "Folder"
+                // url.current = "Folder"
 
                 // Démarrage de récupération des dossiers
-                setNextOffset(0)
+                // setNextOffset(0)
             }
              
         }
@@ -309,11 +290,13 @@ function Home(props) {
     return (
         <div className='ccontainer' onKeyDown={launchSelect} tabIndex="0"> 
             <Header access_token={window.localStorage.getItem("access_token")}/>
+            
             {
                 !window.localStorage.getItem("access_token") ? 
                 <h1> nope yet </h1> :
 
                 <div className="main">
+                    <Notification notification_type={infoNotif.type} notification_messsage={infoNotif.message} activated={infoNotif.activate}/>
                     <div className="center_main">
                         <div className="grp_box">
                             <Box index={0} name='FOLDERS' elements={folders ? folders : []} choice={selections[0]} onClick={handleSelect}/>
