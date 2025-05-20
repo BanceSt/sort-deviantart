@@ -6,7 +6,7 @@ import "../styles/Home.css"
 import Box from '../Components/Box';
 import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
-import Notification from '../Components/Notification';
+// import Notification from '../Components/Notification';
 
 
 const CLIENT_ID = window.localStorage.getItem("Client_id");
@@ -56,7 +56,7 @@ function Home(props) {
     }
 
     // function de récupération des dossiers
-    function charge_folder() {
+    function fetchFolder() {
         // Sélection de l'url pour récupérer les dossiers
         url.current = "Folders"
 
@@ -147,7 +147,7 @@ function Home(props) {
         // Token toujours bon
         else if (window.localStorage.getItem("access_token")) {
             console.log("token non necessaire");
-            charge_folder();
+            fetchFolder();
         }
     }, [])
 
@@ -166,7 +166,7 @@ function Home(props) {
                 window.localStorage.setItem("access_token_time", tokenTime);
 
                 //Chargement des dossiers
-                charge_folder();
+                fetchFolder();
             } else if (url.current === "Folders") {
                 // Récupérations des dossiers
                 setFolders(data.results);
@@ -265,22 +265,22 @@ function Home(props) {
             console.log("PRESS");
             if (selections[0] && selections[1]) {
                 console.log("Start....Folder : " + selections[0].name + "......Sort_type :" + selections[1].name + ".");
-                setInfoNotif({
-                    "type" : "notification_start",
-                    "message" : "Lancemenet du rangement de " + selections[0].name + " avec la function " + selections[1].name + ".",
-                    "activate" : true
-                })
+                // setInfoNotif({
+                //     "type" : "notification_start",
+                //     "message" : "Lancemenet du rangement de " + selections[0].name + " avec la function " + selections[1].name + ".",
+                //     "activate" : true
+                // })
                 // on block la possibilité de réaliser des commandes
-                // block_call_api.current = true;
+                block_call_api.current = true;
 
                 // Sélection du dossier
-                // setFolderId(selections[0].folderid);
+                setFolderId(selections[0].folderid);
 
                 // Sélection de l'url pour récupérer des éléments dans un dossier
-                // url.current = "Folder"
+                url.current = "Folder"
 
                 // Démarrage de récupération des dossiers
-                // setNextOffset(0)
+                setNextOffset(0)
             }
              
         }
@@ -296,7 +296,7 @@ function Home(props) {
                 <h1> nope yet </h1> :
 
                 <div className="main">
-                    <Notification notification_type={infoNotif.type} notification_messsage={infoNotif.message} activated={infoNotif.activate}/>
+                    {/* <Notification notification_type={infoNotif.type} notification_messsage={infoNotif.message} activated={infoNotif.activate}/> */}
                     <div className="center_main">
                         <div className="grp_box">
                             <Box index={0} name='FOLDERS' elements={folders ? folders : []} choice={selections[0]} onClick={handleSelect}/>
