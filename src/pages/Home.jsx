@@ -6,7 +6,7 @@ import "../styles/Home.css"
 import Box from '../Components/Box';
 import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
-// import Notification from '../Components/Notification';
+import Notification from '../Components/Notification';
 
 
 const CLIENT_ID = window.localStorage.getItem("Client_id");
@@ -52,6 +52,11 @@ function Home(props) {
             // Capture des erreurs,
             console.error(err)
             error.current = true
+            setInfoNotif({
+                "type" : "error",
+                "message" : err.message,
+                "activate" : true
+            })
         } 
     }
 
@@ -226,18 +231,23 @@ function Home(props) {
     // useEffect |================| Notification
     useEffect(() => {
         let timeout = false
-        if (Object.keys(infoNotif).length !== 0) {
-            console.log("hererere")
+        if ((Object.keys(infoNotif).length !== 0) && (infoNotif.activate)) {
+            console.log("Notification (var) : ", infoNotif)
+            console.log("Notification (msg) : ", infoNotif.message)
             timeout = setTimeout(() => {
-                setInfoNotif({})
-            }, 5000)
+                let tempInfoNotif = {...infoNotif}
+                // on enlève la notification
+                tempInfoNotif.activate = false
+                console.log("Notification (temp) : ", tempInfoNotif)
+                setInfoNotif(tempInfoNotif)
+            }, 3000)
         }
 
 
         return () => {
-            if (timeout) {
+            if (timeout && (infoNotif.activate)) {
+                console.log("Notification (clear) : ", infoNotif)
                 clearTimeout(timeout)
-                setInfoNotif({})
             }
         }
     }, [infoNotif])
@@ -262,14 +272,13 @@ function Home(props) {
     const launchSelect = (event) => {
         if (((event.key === "Enter") || (event.target.className === "btn_start")) 
             && (!block_call_api.current)) {
-            console.log("PRESS");
             if (selections[0] && selections[1]) {
-                console.log("Start....Folder : " + selections[0].name + "......Sort_type :" + selections[1].name + ".");
-                // setInfoNotif({
-                //     "type" : "notification_start",
-                //     "message" : "Lancemenet du rangement de " + selections[0].name + " avec la function " + selections[1].name + ".",
-                //     "activate" : true
-                // })
+                setInfoNotif({
+                    "type" : "info",
+                    "message" : "Lancemenet du rangement de " + selections[0].name + " avec la function " + selections[1].name + ".",
+                    "activate" : true
+                })
+
                 // on block la possibilité de réaliser des commandes
                 block_call_api.current = true;
 
@@ -291,11 +300,18 @@ function Home(props) {
         <div className='ccontainer' onKeyDown={launchSelect} tabIndex="0"> 
             <Header access_token={window.localStorage.getItem("access_token")}/>
             
+            
             {
                 !window.localStorage.getItem("access_token") ? 
                 <h1> nope yet </h1> :
-
+        
                 <div className="main">
+                    <div className='notification_div'>
+                        <Notification 
+                            notification_type={infoNotif.type} 
+                            notification_message={infoNotif.message} 
+                            activated={infoNotif.activate}/>
+                    </div>
                     {/* <Notification notification_type={infoNotif.type} notification_messsage={infoNotif.message} activated={infoNotif.activate}/> */}
                     <div className="center_main">
                         <div className="grp_box">

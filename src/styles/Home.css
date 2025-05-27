@@ -51,3 +51,9 @@
 .btn_start:hover {
     background-color: #B4CFBD;
 }
+
+.notification_div {
+    position: relative;
+    height: 0;
+    
+}
