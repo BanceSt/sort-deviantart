@@ -14,8 +14,8 @@ export const urls = {
     "Token" : () => {
         return `https://www.deviantart.com/oauth2/token?`;
     },
-    "Folders" : () => {
-        return `https://www.deviantart.com/api/v1/oauth2/collections/folders?`;
+    "Folders" : (queryParams) => {
+        return `https://www.deviantart.com/api/v1/oauth2/collections/folders?${queryParams}`;
     },
     "Folder" : (queryParams) => {
         return `https://www.deviantart.com/api/v1/oauth2/collections/${folderId}?${queryParams}`;
