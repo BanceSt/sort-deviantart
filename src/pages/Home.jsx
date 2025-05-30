@@ -7,6 +7,7 @@ import Box from '../Components/Box';
 import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
 import Notification from '../Components/Notification';
+import LoadingBar from '../Components/LoadingBar';
 
 
 const CLIENT_ID = window.localStorage.getItem("Client_id");
@@ -23,6 +24,7 @@ function Home(props) {
     const url = useRef("");
     const error = useRef(false);
     const block_call_api = useRef(false);
+    const folder_length = useRef(0);
     const [infoNotif, setInfoNotif] = useState({});
 
     const [data, setData] = useState(null);
@@ -32,6 +34,8 @@ function Home(props) {
     const [selections, setSelections] = useState([
         "", "", ""
     ]);
+    const [progressBar, setProgressBar] = useState(0);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // ===================================== func call api =================================
     // function request api
@@ -68,14 +72,15 @@ function Home(props) {
         // Aucun dossiers au début
         setFolders([]);
 
-        //form pour récupération les dossiers
-        const formData = new FormData();
-        formData.append('access_token', window.localStorage.getItem("access_token"));
-        formData.append('ext_preload', false);
-        formData.append('limit', 50);
+        
+        const queryParams = new URLSearchParams({
+                                        "access_token" : window.localStorage.getItem("access_token"),
+                                        "ext_preload": false,
+                                        "calculate_size" : true,
+                                        "limit" : 50}).toString();
         
         // call api pour récupérer les dossiers
-        fetch_data(formData)
+        fetch_data({}, queryParams)
     }
 
     // function pour récupérer des deviations
@@ -175,13 +180,15 @@ function Home(props) {
             } else if (url.current === "Folders") {
                 // Récupérations des dossiers
                 setFolders(data.results);
-                console.log("Folders-zone");
+                console.log("Folders-zone : ", data);
                 
             } else if (url.current === "Folder") {
                 // Récupération des deviations
+                setProgressBar(progressBar + (data.results.length / folder_length.current * 100));
                 if (data.next_offset) {
   
                     // si c'est le première requête sur les deviants
+                    
                     if (nextOffset === 0)  {
                         setDeviants([...data.results]);
                     } else { // si il y'en a d'autre à faire
@@ -200,16 +207,29 @@ function Home(props) {
             } else if (url.current === "Copy") {
                 // Copie des deviations
                 if (deviants.length > ((nextOffset + 1) * 24)) { //copie des éléments pas groupe de 24
+                    // update de la barre de progression
+                    setProgressBar(progressBar + (24 / folder_length.current * 100));
                     setNextOffset(nextOffset + 1);
                 } else { //fin de copie
+                    // update de la barre de progression
+                    setProgressBar(progressBar + ((deviants.length - (nextOffset * 24)) / folder_length.current * 100));
                     setNextOffset(-1);
                     setDeviants([]);
                     block_call_api.current = false;
+
+                    setTimeout(() => {
+                        setIsProcessing(false);
+                        setInfoNotif({
+                            "type" : "success",
+                            "message" : "Rangement de \"" + selections[0].name + "\" terminé !",
+                            "activate" : true
+                        })
+                    }, 1000)
                     console.log("....End")
                 }
             } 
         } else if (error.current) {
-            console.log("It's him")
+            // Erreur dans la requête
             setInfoNotif({
                 "message" : data.error
             })
@@ -232,13 +252,10 @@ function Home(props) {
     useEffect(() => {
         let timeout = false
         if ((Object.keys(infoNotif).length !== 0) && (infoNotif.activate)) {
-            console.log("Notification (var) : ", infoNotif)
-            console.log("Notification (msg) : ", infoNotif.message)
             timeout = setTimeout(() => {
                 let tempInfoNotif = {...infoNotif}
                 // on enlève la notification
                 tempInfoNotif.activate = false
-                console.log("Notification (temp) : ", tempInfoNotif)
                 setInfoNotif(tempInfoNotif)
             }, 3000)
         }
@@ -246,7 +263,6 @@ function Home(props) {
 
         return () => {
             if (timeout && (infoNotif.activate)) {
-                console.log("Notification (clear) : ", infoNotif)
                 clearTimeout(timeout)
             }
         }
@@ -285,6 +301,11 @@ function Home(props) {
                 // Sélection du dossier
                 setFolderId(selections[0].folderid);
 
+                // on récupère la taille du dossier pour la barre de progression
+                folder_length.current = selections[0].size * 2; // multiplication par 2 pour compter la récupération et la copie
+                setProgressBar(0);
+                setIsProcessing(true);
+
                 // Sélection de l'url pour récupérer des éléments dans un dossier
                 url.current = "Folder"
 
@@ -320,6 +341,9 @@ function Home(props) {
                             <Box index={2} name="LOG" />
                         </div>
                     </div>
+
+                    {/*LoadingBar */}
+                    <LoadingBar progress={progressBar} activated={isProcessing}/>
 
                     {/* bouton d'éxécution */}
                     <button className="btn_start" onClick={launchSelect}>
