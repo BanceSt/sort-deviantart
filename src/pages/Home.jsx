@@ -243,8 +243,14 @@ function Home(props) {
         // Reste t'il des requêtes à éffectuer
         if (nextOffset >= 0) {
             // console.log("Deviations : ", deviants)
-            if (url.current === "Folder") charge_deviations();
-            else if (url.current === "Copy") copy_deviations();
+            if (url.current === "Folder")
+                setTimeout(() => {
+                    charge_deviations();
+                }, 250); // limite le nombre de requêtes à 4 par seconde
+            else if (url.current === "Copy") 
+                setTimeout(() => {
+                    copy_deviations();
+                }, 250); // limite le nombre de requêtes à 4 par seconde
         } else if (nextOffset === -2) setNextOffset(0);
     }, [nextOffset])
 
