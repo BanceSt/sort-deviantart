@@ -8,6 +8,7 @@ import { sorts_types } from '../assets/params/func_sort';
 import "../db/db"
 import Notification from '../Components/Notification';
 import LoadingBar from '../Components/LoadingBar';
+import { addSortWithDeviations, db } from '../db/db';
 
 
 const CLIENT_ID = window.localStorage.getItem("Client_id");
@@ -186,6 +187,7 @@ function Home(props) {
                 // Récupération des deviations
                 setProgressBar(progressBar + (data.results.length / folder_length.current * 100));
                 if (data.next_offset) {
+                    console.log("Deviations-zone : ", data);
   
                     // si c'est le première requête sur les deviants
                     
@@ -197,7 +199,7 @@ function Home(props) {
                     setNextOffset(data.next_offset);  // y'a t'il d'autre deviants à récupérer
                 }
                 else  {
-
+                    console.log("Deviations-zone : ", data);
                     let tempdeviants = selections[1].func([...deviants, ...data.results]);
                     url.current = "Copy";
                     setDeviants([...tempdeviants]); 
@@ -216,6 +218,11 @@ function Home(props) {
                     setNextOffset(-1);
                     setDeviants([]);
                     block_call_api.current = false;
+
+
+                    // Sauvegarde de la procedure dans la base de données
+                    addSortWithDeviations(selections[1].name, deviants)
+                    console.log("Sauvegarde de la procédure dans la base de données. ", deviants);
 
                     setTimeout(() => {
                         setIsProcessing(false);
